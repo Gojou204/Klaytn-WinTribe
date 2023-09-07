@@ -14,24 +14,9 @@ function App() {
     address: '',
   });
 
-  useEffect(() => {
-    async function loadWeb3() {
-      if (window.ethereum) {
-        const web3 = new Web3(window.ethereum);
-        try {
-          await window.ethereum.request({ method: 'eth_requestAccounts' });
-          setWeb3(web3);
-          const accounts = await web3.eth.getAccounts();
-          setAccount(accounts[0]);
-          setIsConnected(true);
-        } catch (error) {
-          console.error(error);
-        }
-      }
-    }
-
-    loadWeb3();
-  }, []);
+  useEffect(() =>{
+    getCurrentWalletConnected();
+  });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -44,26 +29,49 @@ function App() {
       typeof window.ethereum !== "undefined"
     ) {
       try {
-        await window.ethereum.request({
+        const accounts = await window.ethereum.request({
           method: "eth_requestAccounts",
         });
-        const web3 = new Web3(window.ethereum);
-        setWeb3(web3);
-        const accounts = await web3.eth.getAccounts();
         setAccount(accounts[0]);
-
+        setIsConnected(true);
+        console.log(accounts[0]);
       } catch (error) {
-        console.log(error);
+        console.error(error.message);
       }
     } else {
-      alert("Not install Metamask! Please install wallet");
+      alert("Not install Metamask! Please install Metamask");
+    }
+  };
+
+  const getCurrentWalletConnected = async () => {
+    if (
+      typeof window !== "undefined" &&
+      typeof window.ethereum !== "undefined"
+    ) {
+      try {
+        const accounts = await window.ethereum.request({
+          method: "eth_accounts",
+        });
+        if(accounts.length >0){
+          setAccount(accounts[0]);
+          setIsConnected(true);
+          console.log(accounts[0]);
+        }else{
+          console.log("Connect to Metamask using the Connect Button");
+        }
+        
+      } catch (error) {
+        console.error(error.message);
+      }
+    } else {
+      alert("Not install Metamask! Please install Metamask");
     }
   };
 
   const disconnectWallet = async () => {
     if (window.ethereum) {
       try {
-        await window.ethereum.request({ method: 'eth_logout' });
+        await window.ethereum.request({ method: 'eth_disconnect' });
         setAccount('');
         setIsConnected(false);
       } catch (error) {
@@ -92,7 +100,7 @@ function App() {
         <h1>Xác thực Giấy phép lái xe</h1>
         {isConnected ? (
           <div>
-            <p>Đã kết nối với tài khoản: {account}</p>
+            <p>Đã kết nối với tài khoản: {account.substring(0,8)}....{account.substring(37)}</p>
             <button onClick={disconnectWallet}>Ngắt kết nối</button>
           </div>
         ) : (
